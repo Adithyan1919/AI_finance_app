@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="text-center mb-4">Login</h2>
+                <form method="POST">
+                    <!-- Login Type Toggle -->
+                    <div class="mb-3">
+                        <label class="form-label">Login Type</label>
+                        <select class="form-select" name="login_type" id="loginType" onchange="toggleLoginFields()">
+                            <option value="individual">Individual</option>
+                            <option value="family">Family</option>
+                        </select>
+                    </div>
+
+                    <!-- Individual Login -->
+                    <div id="individualLogin">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Family Login -->
+                    <div id="familyLogin" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Family Username</label>
+                            <input type="text" name="family_username" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Family Password</label>
+                            <input type="password" name="family_password" class="form-control">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('register') }}">Create new account</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleLoginFields() {
+        const loginType = document.getElementById("loginType").value;
+        const individual = document.getElementById("individualLogin");
+        const family = document.getElementById("familyLogin");
+
+        if (loginType === "individual") {
+            individual.style.display = "block";
+            family.style.display = "none";
+        } else {
+            individual.style.display = "none";
+            family.style.display = "block";
+        }
+    }
+</script>
+{% endblock %}

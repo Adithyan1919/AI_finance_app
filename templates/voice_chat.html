@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .voice-container {
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .voice-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 4rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .voice-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .voice-button.recording {
+            background: #ff4757;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .voice-status {
+            margin-top: 30px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .conversation-area {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .voice-wave {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: wave 2s infinite;
+            opacity: 0;
+        }
+        
+        .voice-wave.active {
+            opacity: 1;
+        }
+        
+        @keyframes wave {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        .controls button {
+            margin: 5px;
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+        
+        .controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="voice-container">
+                    <div class="controls">
+                        <button class="btn" onclick="toggleSettings()">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <button class="btn" onclick="clearConversation()">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn" onclick="goBack()">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="voice-wave" id="voiceWave"></div>
+                    
+                    <button class="voice-button" id="voiceButton" onclick="toggleVoice()">
+                        <i class="fas fa-microphone" id="micIcon"></i>
+                    </button>
+                    
+                    <div class="voice-status" id="voiceStatus">
+                        Tap the microphone to start talking
+                    </div>
+                    
+                    <div class="conversation-area" id="conversationArea" style="display: none;">
+                        <div id="conversationContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Voice Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Voice Recognition Language</label>
+                        <select class="form-select" id="voiceLanguage">
+                            <option value="en-US">English (US)</option>
+                            <option value="en-IN">English (India)</option>
+                            <option value="hi-IN">Hindi</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Speech Rate</label>
+                        <input type="range" class="form-range" id="speechRate" min="0.5" max="2" step="0.1" value="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Voice Volume</label>
+                        <input type="range" class="form-range" id="voiceVolume" min="0" max="1" step="0.1" value="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isRecording = false;
+        let recognition;
+        let synthesis = window.speechSynthesis;
+        
+        // Initialize Speech Recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+        } else if ('SpeechRecognition' in window) {
+            recognition = new SpeechRecognition();
+        }
+        
+        if (recognition) {
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                document.getElementById('voiceStatus').textContent = 'Listening...';
+                document.getElementById('voiceWave').classList.add('active');
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                processVoiceInput(transcript);
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                document.getElementById('voiceStatus').textContent = 'Error: ' + event.error;
+                resetVoiceButton();
+            };
+            
+            recognition.onend = function() {
+                resetVoiceButton();
+            };
+        }
+        
+        function toggleVoice() {
+            if (!recognition) {
+                alert('Speech recognition is not supported in this browser.');
+                return;
+            }
+            
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                isRecording = true;
+                
+                const button = document.getElementById('voiceButton');
+                const icon = document.getElementById('micIcon');
+                
+                button.classList.add('recording');
+                icon.className = 'fas fa-stop';
+            }
+        }
+        
+        function resetVoiceButton() {
+            isRecording = false;
+            
+            const button = document.getElementById('voiceButton');
+            const icon = document.getElementById('micIcon');
+            
+            button.classList.remove('recording');
+            icon.className = 'fas fa-microphone';
+            
+            document.getElementById('voiceStatus').textContent = 'Tap the microphone to start talking';
+            document.getElementById('voiceWave').classList.remove('active');
+        }
+        
+        function processVoiceInput(transcript) {
+            showConversation();
+            addToConversation('You: ' + transcript, 'user');
+            
+            document.getElementById('voiceStatus').textContent = 'Processing...';
+            
+            fetch('/process-voice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: transcript
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    addToConversation('AI: ' + data.response, 'ai');
+                    speakResponse(data.response);
+                } else {
+                    addToConversation('AI: Sorry, I encountered an error.', 'ai');
+                }
+                document.getElementById('voiceStatus').textContent = 'Tap the microphone to start talking';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addToConversation('AI: Sorry, I encountered an error.', 'ai');
+                document.getElementById('voiceStatus').textContent = 'Error occurred';
+            });
+        }
+        
+        function speakResponse(text) {
+            if (synthesis && synthesis.speak) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = parseFloat(document.getElementById('speechRate').value);
+                utterance.volume = parseFloat(document.getElementById('voiceVolume').value);
+                synthesis.speak(utterance);
+            }
+        }
+        
+        function showConversation() {
+            document.getElementById('conversationArea').style.display = 'block';
+        }
+        
+        function addToConversation(message, type) {
+            const conversationContent = document.getElementById('conversationContent');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `mb-2 ${type === 'user' ? 'text-end' : 'text-start'}`;
+            messageDiv.innerHTML = `<small class="text-muted">${new Date().toLocaleTimeString()}</small><br>${message}`;
+            conversationContent.appendChild(messageDiv);
+            conversationContent.scrollTop = conversationContent.scrollHeight;
+        }
+        
+        function clearConversation() {
+            document.getElementById('conversationContent').innerHTML = '';
+            document.getElementById('conversationArea').style.display = 'none';
+        }
+        
+        function toggleSettings() {
+            const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+            modal.show();
+        }
+        
+        function goBack() {
+            window.history.back();
+        }
+        
+        // Update recognition language when changed
+        document.getElementById('voiceLanguage').addEventListener('change', function() {
+            if (recognition) {
+                recognition.lang = this.value;
+            }
+        });
+    </script>
+</body>
+</html>

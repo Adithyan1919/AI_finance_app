@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Expense Tracker</h2>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Expense Form -->
+    <div class="card">
+        <div class="card-body">
+            <h4>Add Expense</h4>
+            <form id="expenseForm">
+                <div class="mb-3">
+                    <label for="mainCategory">Main Category</label>
+                    <select id="mainCategory" class="form-select" required>
+                        <option value="">-- Select Main Category --</option>
+                        <option value="Essentials">Essentials</option>
+                        <option value="Lifestyle">Lifestyle</option>
+                        <option value="Savings">Savings</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                        <option value="Taxes">Taxes</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="subCategory">Subcategory</label>
+                    <select id="subCategory" class="form-select" required>
+                        <option value="">-- Select Subcategory --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Amount (INR)</label>
+                    <input type="number" id="amount" class="form-control" min="1" required>
+                </div>
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Expense</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Table -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h4>Expense List</h4>
+            <input type="text" id="search" class="form-control mb-2" placeholder="Search by category...">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Main Category</th>
+                        <th>Subcategory</th>
+                        <th>Amount (INR)</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="expenseTable"></tbody>
+            </table>
+            <h5>Total Expenses: ₹<span id="totalExpenses">0</span></h5>
+            <button class="btn btn-success" onclick="exportCSV()">Export to CSV</button>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Expense Breakdown</h4>
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Planned vs. Actual Expenses</h4>
+                    <canvas id="budgetComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteExpense(id) {
+        fetch(`/delete-expense/${id}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(() => location.reload())
+            .catch(error => console.error('Error deleting expense:', error));
+    }
+
+    function exportCSV() {
+        fetch('/export-expenses')
+            .then(response => response.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'expenses.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error exporting CSV:', error));
+    } 
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const expenseForm = document.getElementById('expenseForm');
+        const expenseTable = document.getElementById('expenseTable');
+        const totalExpenses = document.getElementById('totalExpenses');
+        const searchInput = document.getElementById('search');
+        let expenseChart, budgetChart;
+
+        // Subcategory mapping
+        const subcategories = {
+            "Essentials": [
+                "Food & Groceries", "Rent/EMI", "Utilities", "Transportation",
+                "Debt Repayment", "Child Education", "Rent/Utilities",
+                "Food", "Rent/Hostel Fees", "Education Expenses"
+            ],
+            "Lifestyle": [
+                "Entertainment", "Dining Out", "Subscriptions",
+                "Shopping", "Leisure"
+            ],
+            "Savings": [
+                "Emergency Fund", "Mutual Funds", "Mutual Funds & Stocks",
+                "Stocks & Mutual Funds", "FD/RD", "Savings"
+            ],
+            "Miscellaneous": [
+                "Healthcare", "Insurance", "Gifts", "Charity", "Miscellaneous"
+            ],
+            "Taxes": ["Taxes"]
+        };
+
+        // Setup category dropdown relationship
+        document.getElementById("mainCategory").addEventListener("change", function () {
+            const selectedMain = this.value;
+            const subSelect = document.getElementById("subCategory");
+            // Clear existing options
+            subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+            // Populate subcategories if a valid main category is selected
+            if (subcategories[selectedMain]) {
+                subcategories[selectedMain].forEach(sub => {
+                    const option = document.createElement("option");
+                    option.value = sub;
+                    option.textContent = sub;
+                    subSelect.appendChild(option);
+                });
+            }
+        });
+
+        expenseForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const mainCategory = document.getElementById('mainCategory').value;
+            const subCategory = document.getElementById('subCategory').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const date = document.getElementById('date').value;
+
+            if (!mainCategory || !subCategory || isNaN(amount) || !date) {
+                alert("Please enter valid expense details.");
+                return;
+            }
+
+            fetch('/add-expense', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mainCategory, subCategory, amount, date })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadExpenses();
+                    expenseForm.reset();
+                }
+            })
+            .catch(error => console.error('Error adding expense:', error));
+        });
+
+        function loadExpenses() {
+                    fetch('/get-expenses')
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Received data from backend:", data); // ✅ Add this
+                            let total = 0;
+                            if (!Array.isArray(data.expenses)) {
+                                console.error("Expenses not an array:", data.expenses);
+                                return;
+                            }
+                            expenseTable.innerHTML = data.expenses.map(expense => {
+                            const amount = parseFloat(expense.amount || 0);
+                            total += amount;
+                            return `
+                                <tr>
+                                    <td>${expense.mainCategory}</td>
+                                    <td>${expense.subCategory}</td>
+                                    <td>₹${amount.toFixed(2)}</td>
+                                    <td>${expense.date}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteExpense(${expense.id})">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+
+                            totalExpenses.textContent = `${total.toFixed(2)}`;
+                            updateCharts(data.expenses, data.budget || []);
+                        })
+                        .catch(error => {
+                            console.error('Error loading expenses:', error); // ✅ Add this
+                        });
+                }
+
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            if (searchTerm.length > 0) {
+                fetch('/get-expenses')
+                    .then(response => response.json()) 
+                    .then(data => {
+                        const filteredExpenses = data.expenses.filter(expense => 
+                            expense.mainCategory.toLowerCase().includes(searchTerm) || 
+                            expense.subCategory.toLowerCase().includes(searchTerm)
+                        );
+                        
+                        let total = 0;
+                        expenseTable.innerHTML = filteredExpenses.map(expense => {
+                            total += expense.amount;
+                            return `
+                                <tr>
+                                    <td>${expense.mainCategory}</td>
+                                    <td>${expense.subCategory}</td>
+                                    <td>₹${expense.amount.toFixed(2)}</td>
+                                    <td>${expense.date}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteExpense(${expense.id})">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                        totalExpenses.textContent = `${total.toFixed(2)}`;
+                    });
+            } else {
+                loadExpenses();
+            }
+        });
+
+        function updateCharts(expenses, budgets) {
+            if (expenseChart) expenseChart.destroy();
+            if (budgetChart) budgetChart.destroy();
+    
+            // Main Category Chart
+            const mainCategories = [...new Set(expenses.map(e => e.mainCategory))];
+            const mainAmounts = mainCategories.map(cat => 
+                expenses.filter(e => e.mainCategory === cat).reduce((sum, e) => sum + e.amount, 0)
+            );
+    
+            expenseChart = new Chart(document.getElementById('expenseChart').getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: mainCategories,
+                    datasets: [{
+                        data: mainAmounts,
+                        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40']
+                    }]
+                },
+                options: { responsive: true }
+            });
+    
+            // Budget Comparison Chart
+            const plannedBudget = {};
+            budgets.forEach(b => { plannedBudget[b.mainCategory] = b.amount; });
+    
+            const planned = mainCategories.map(cat => plannedBudget[cat] || 0);
+            const actual = mainAmounts;
+    
+            budgetChart = new Chart(document.getElementById('budgetComparisonChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: mainCategories,
+                    datasets: [
+                        { label: 'Planned', data: planned, backgroundColor: 'blue' },
+                        { label: 'Actual', data: actual, backgroundColor: 'red' }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        loadExpenses();
+    });
+</script>
+{% endblock %}

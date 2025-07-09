@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h4>Government Schemes</h4>
+
+                <!-- Search Bar -->
+                <div class="input-group mb-3">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search schemes...">
+                    <button class="btn btn-outline-secondary" id="searchBtn">Search</button>
+                </div>
+
+                <div id="schemesList">
+                    {% for scheme in schemes %}
+                    <div class="card scheme-card mb-2">
+                        <div class="card-body">
+                            <h5 class="scheme-name">{{ scheme.Name }}</h5>
+                            <p class="text-muted">{{ scheme.Description }}</p>
+                            
+                            <!-- View Details Button with Bootstrap Collapse -->
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#details-{{ loop.index }}">
+                                View Details
+                            </button>
+
+                            <!-- Hidden Details Section -->
+                            <div id="details-{{ loop.index }}" class="collapse mt-2">
+                                <p><strong>Description:</strong> {{ scheme.Description }}</p>
+                                <p><strong>Eligibility:</strong> {{ scheme.Eligibility }}</p>
+                                <p><strong>Documents Required:</strong> {{ scheme.Documents }}</p>
+                                <p><strong>Application Process:</strong> {{ scheme.Process }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search Functionality
+    document.getElementById('searchBtn').addEventListener('click', function() {
+        const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.scheme-card').forEach(card => {
+            const schemeName = card.querySelector('.scheme-name').textContent.toLowerCase();
+            card.style.display = schemeName.includes(searchQuery) ? 'block' : 'none';
+        });
+    });
+});
+</script>
+
+{% endblock %}

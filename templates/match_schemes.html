@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Find Matching Government Schemes</h2>
+    <div class="card">
+        <div class="card-body">
+            <form id="schemeForm">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="age" class="form-label">Age</label>
+                        <input type="number" id="age" class="form-control" required min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select id="gender" class="form-select" required>
+                            <option value="">-- Select Gender --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="income" class="form-label">Annual Income (INR)</label>
+                        <input type="number" id="income" class="form-control" required min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="profession" class="form-label">Profession</label>
+                        <select id="profession" class="form-select" required>
+                            <option value="">-- Select Profession --</option>
+                            <option value="Farmer">Farmer</option>
+                            <option value="Student">Student</option>
+                            <option value="Entrepreneur">Entrepreneur</option>
+                            <option value="Laborer">Laborer</option>
+                            <option value="Self-Employed">Self-Employed</option>
+                            <option value="Unemployed">Unemployed</option>
+                            <option value="Retired">Retired</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Find Matching Schemes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card mt-4 d-none" id="resultsCard">
+        <div class="card-body">
+            <h4 class="card-title">Eligible Schemes</h4>
+            <div id="resultsTableWrapper"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('schemeForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const age = parseInt(document.getElementById('age').value);
+    const gender = document.getElementById('gender').value;
+    const income = parseFloat(document.getElementById('income').value);
+    const profession = document.getElementById('profession').value;
+
+    fetch('/match-schemes/api', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ age, gender, income, profession })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultsCard = document.getElementById('resultsCard');
+        const resultsTableWrapper = document.getElementById('resultsTableWrapper');
+        resultsTableWrapper.innerHTML = '';
+
+        if (data.length === 0) {
+            resultsTableWrapper.innerHTML = `
+                <div class="alert alert-info">No matching schemes found for the given criteria.</div>
+            `;
+        } else {
+            let table = `
+                <table class="table table-bordered table-hover mt-3">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Scheme Name</th>
+                            <th>Eligibility</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map((scheme, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${scheme.name}</td>
+                                <td>${scheme.eligibility}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            resultsTableWrapper.innerHTML = table;
+        }
+
+        resultsCard.classList.remove('d-none');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Something went wrong. Please try again.");
+    });
+});
+</script>
+{% endblock %}

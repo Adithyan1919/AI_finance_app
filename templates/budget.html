@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4>Budget Planning</h4>
+                <div class="mb-3">
+                    <label for="salaryInput" class="form-label">Enter Monthly Salary (INR):</label>
+                    <input type="number" id="salaryInput" class="form-control" placeholder="Enter your salary">
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div id="budgetChart"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Suggested Budget Plans</h5>
+                        <div id="budgetPlans"></div>
+                        <button class="btn btn-success mt-3" id="generateBudget">Generate New Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5>Selected Budget Plan</h5>
+                <table class="table" id="selectedBudget">
+                    <thead>
+                        <tr>
+                            <th>Main Category</th>
+                            <th>Subcategory</th>
+                            <th>Amount (INR)</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Budget items will be populated here -->
+                    </tbody>
+                </table>
+                <button class="btn btn-primary" id="saveBudget">Save This Plan</button>
+                <button class="btn btn-secondary" id="addExpense">Add Expense</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    budgetPlans = [
+        { name: "Basic Budget Plan", allocations: { 
+            "Essentials": { "Food & Groceries": 15, "Rent/EMI": 30, "Utilities": 5, "Transportation": 10 },
+            "Lifestyle": { "Entertainment": 5, "Dining Out": 3, "Subscriptions": 2, "Shopping": 5 },
+            "Savings & Investments": { "Emergency Fund": 10, "Mutual Funds": 8, "FD/RD": 5 },
+            "Miscellaneous": { "Healthcare": 4, "Insurance": 2, "Gifts": 1 }
+        }},
+        { name: "Balanced Budget Plan", allocations: {
+            "Essentials": { "Food & Groceries": 12, "Rent/EMI": 25, "Utilities": 6, "Transportation": 8 },
+            "Lifestyle": { "Entertainment": 8, "Dining Out": 5, "Subscriptions": 3, "Shopping": 6 },
+            "Savings & Investments": { "Emergency Fund": 15, "Mutual Funds": 10, "FD/RD": 7 },
+            "Miscellaneous": { "Healthcare": 4, "Insurance": 3, "Gifts": 2 }
+        }},
+        { name: "Luxury Budget Plan", allocations: {
+            "Essentials": { "Food & Groceries": 10, "Rent/EMI": 20, "Utilities": 6, "Transportation": 10 },
+            "Lifestyle": { "Entertainment": 15, "Dining Out": 10, "Subscriptions": 5, "Shopping": 10 },
+            "Savings & Investments": { "Emergency Fund": 10, "Stocks & Mutual Funds": 10, "FD/RD": 5 },
+            "Miscellaneous": { "Healthcare": 4, "Insurance": 3, "Charity": 2 }
+        }},
+        { name: "Minimalist Budget Plan", allocations: {
+            "Essentials": { "Food & Groceries": 10, "Rent/EMI": 25, "Utilities": 5, "Transportation": 5 },
+            "Lifestyle": { "Entertainment": 2, "Dining Out": 2, "Subscriptions": 2, "Shopping": 3 },
+            "Savings & Investments": { "Emergency Fund": 20, "Mutual Funds & Stocks": 20, "FD/RD": 5 },
+            "Miscellaneous": { "Healthcare": 3, "Insurance": 5, "Charity": 3 }
+        }},
+        { name: "Debt-Focused Budget Plan", allocations: {
+            "Essentials": { "Food & Groceries": 10, "Rent/EMI": 20, "Utilities": 5, "Transportation": 5, "Debt Repayment": 40 },
+            "Lifestyle": { "Entertainment": 3, "Dining Out": 2, "Subscriptions": 2, "Shopping": 3 },
+            "Savings & Investments": { "Emergency Fund": 5, "FD/RD": 5 }
+        }},
+        { name: "Young Professionals Budget Plan", allocations: {
+            "Essentials": { "Food & Groceries": 12, "Rent/EMI": 25, "Utilities": 5, "Transportation": 8 },
+            "Lifestyle": { "Entertainment": 8, "Dining Out": 5, "Shopping": 6 },
+            "Savings & Investments": { "Emergency Fund": 10, "Mutual Funds & Stocks": 15, "FD/RD": 6 },
+            "Miscellaneous": { "Healthcare": 3, "Insurance": 2 }
+        }},
+        { name: "Family Budget Plan", allocations: {
+            "Essentials": { "Food & Groceries": 20, "Rent/EMI": 30, "Utilities": 6, "Child Education": 10 },
+            "Lifestyle": { "Entertainment": 5, "Subscriptions": 4 },
+            "Savings & Investments": { "Emergency Fund": 10, "FD/RD": 5 },
+            "Miscellaneous": { "Healthcare": 5, "Insurance": 5 }
+        }},
+        { name: "Freelancer Budget Plan", allocations: {
+            "Essentials": { "Food & Groceries": 40 },
+            "Lifestyle": { "Entertainment": 15 },
+            "Savings & Investments": { "Emergency Fund": 30 },
+            "Taxes": { "Taxes": 15 }
+        }},
+        { name: "Retiree Budget Plan", allocations: {
+            "Essentials": { "Healthcare": 20, "Rent/Utilities": 30 },
+            "Savings": { "Savings": 25 },
+            "Lifestyle": { "Leisure": 15 },
+            "Miscellaneous": { "Miscellaneous": 10 }
+        }},
+        { name: "Student Budget Plan", allocations: {
+            "Essentials": { "Food": 20, "Rent/Hostel Fees": 30, "Education Expenses": 25 },
+            "Lifestyle": { "Entertainment": 5 },
+            "Savings": { "Savings": 10 }
+        }}
+    ];
+
+    const salaryInput = document.getElementById("salaryInput");
+    const budgetPlansDiv = document.getElementById("budgetPlans");
+    const tableBody = document.querySelector("#selectedBudget tbody");
+    const saveBtn = document.getElementById("saveBudget");
+    const addExpenseBtn = document.getElementById("addExpense");
+    const generateBtn = document.getElementById("generateBudget");
+
+    let currentSelectedPlanIndex = -1;
+
+    function displayBudgetPlans() {
+        budgetPlansDiv.innerHTML = "";
+        budgetPlans.forEach((plan, index) => {
+            const planDiv = document.createElement("div");
+            planDiv.classList.add("card", "p-2", "mb-2");
+            planDiv.innerHTML = `
+                <h6>${plan.name}</h6>
+                <button class="btn btn-sm btn-info selectBudget" data-index="${index}">Select</button>
+            `;
+            budgetPlansDiv.appendChild(planDiv);
+        });
+
+        document.querySelectorAll(".selectBudget").forEach(button => {
+            button.addEventListener("click", function () {
+                document.querySelectorAll(".selectBudget").forEach(btn => btn.classList.remove("active"));
+                this.classList.add("active");
+                currentSelectedPlanIndex = parseInt(this.getAttribute("data-index"));
+                displaySelectedBudget(budgetPlans[currentSelectedPlanIndex]);
+            });
+        });
+    }
+
+    function displaySelectedBudget(plan) {
+        tableBody.innerHTML = "";
+        const salary = parseFloat(salaryInput.value);
+
+        if (isNaN(salary) || salary <= 0) {
+            alert("Please enter a valid monthly salary first.");
+            return;
+        }
+
+        for (let mainCategory in plan.allocations) {
+            for (let subCategory in plan.allocations[mainCategory]) {
+                const percentage = plan.allocations[mainCategory][subCategory];
+                const amount = Math.round((salary * percentage) / 100);
+
+                const row = `<tr>
+                    <td>${mainCategory}</td>
+                    <td>${subCategory}</td>
+                    <td>${amount.toLocaleString()} INR</td>
+                    <td>${percentage}%</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            }
+        }
+    }
+
+    salaryInput.addEventListener("input", function () {
+        if (currentSelectedPlanIndex >= 0) {
+            displaySelectedBudget(budgetPlans[currentSelectedPlanIndex]);
+        }
+    });
+
+    generateBtn.addEventListener("click", function () {
+        const randomIndex = Math.floor(Math.random() * budgetPlans.length);
+        currentSelectedPlanIndex = randomIndex;
+        document.querySelectorAll(".selectBudget").forEach((btn, i) => {
+            btn.classList.toggle("active", i === randomIndex);
+        });
+        displaySelectedBudget(budgetPlans[randomIndex]);
+    });
+
+    addExpenseBtn.addEventListener("click", function () {
+        window.location.href = "/expense";  // Update if your expense route is different
+    });
+
+    saveBtn.addEventListener("click", function () {
+        const rows = tableBody.querySelectorAll("tr");
+
+        if (rows.length === 0) {
+            alert("Please select a budget plan first.");
+            return;
+        }
+
+        const budgetData = [];
+        rows.forEach(row => {
+            const mainCategory = row.cells[0].textContent.trim();
+            const subCategory = row.cells[1].textContent.trim();
+            const amount = parseFloat(row.cells[2].textContent.replace(/[^\d.-]/g, ''));
+
+            budgetData.push({ mainCategory, subCategory, amount });
+        });
+
+        fetch('/save-budget', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ budgets: budgetData })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert("Budget plan saved successfully!");
+            } else {
+                alert("Failed to save budget: " + (data.message || ""));
+            }
+        })
+        .catch(err => {
+            console.error("Error saving budget:", err);
+            alert("Error occurred while saving budget.");
+        });
+    });
+
+    // Initialize everything
+    displayBudgetPlans();
+});
+</script>
+
+{% endblock %}

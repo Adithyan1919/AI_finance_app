@@ -1,0 +1,50 @@
+<!-- view_family_expenses.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Family Expenses</h3>
+                    <a href="{{ url_for('family_expense') }}" class="btn btn-light">Add New Expense</a>
+                </div>
+                <div class="card-body">
+                    {% if expenses %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Family Member</th>
+                                    <th>Category</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in expenses %}
+                               <tr>
+                                    <td>{{ expense.member_name }}{% if expense.relation %} ({{ expense.relation }}){% endif %}</td>
+                                    <td>{{ expense.main_category }}{% if expense.sub_category %} / {{ expense.sub_category }}{% endif %}</td>
+                                    <td>{{ expense.amount }}</td>
+                                    <td>{{ expense.date }}</td>
+                                </tr>
+
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No family expenses recorded yet.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

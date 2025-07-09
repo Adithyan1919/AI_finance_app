@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="mb-4">Register</h2>
+        <form name="registerForm" id="registerForm" onsubmit="return validateForm(event)" method="post">
+            <div class="mb-3">
+                <label>Full Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Date of Birth</label>
+                <input type="date" name="dob" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Annual Income (₹)</label>
+                <input type="number" name="annual_income" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Password</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" class="form-control" pattern="[0-9]{10}" required>
+            </div>
+            <div class="mb-3">
+                <label>Family Name</label>
+                <input type="text" name="family_name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Number of Family Members</label>
+                <input type="number" name="family_members" class="form-control" min="1" required>
+            </div>
+            <div class="mb-3">
+                <label>Country</label>
+                <input type="text" name="country" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function validateForm(event) {
+        event.preventDefault(); // Prevent form submission
+
+        let form = document.forms["registerForm"];
+        let name = form["name"].value.trim();
+        let dob = form["dob"].value;
+        let annualIncome = form["annual_income"].value;
+        let email = form["email"].value.trim();
+        let password = form["password"].value;
+        let phone = form["phone"].value;
+        let familyName = form["family_name"].value.trim();
+        let familyMembers = form["family_members"].value;
+        let country = form["country"].value.trim();
+
+        // Full Name Validation
+        if (name === "") {
+            alert("Full Name is required.");
+            return false;
+        }
+
+        // Date of Birth Validation
+        let birthDate = new Date(dob);
+        let today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        let monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        if (age < 18) {
+            alert("You must be at least 18 years old.");
+            return false;
+        }
+
+        // Annual Income Validation
+        if (isNaN(annualIncome) || annualIncome <= 0) {
+            alert("Annual Income must be a positive number.");
+            return false;
+        }
+
+        // Email Validation
+        let emailPattern = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        if (!emailPattern.test(email)) {
+            alert("Invalid email format.");
+            return false;
+        }
+
+        // Password Validation
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters long.");
+            return false;
+        }
+
+        // Phone Number Validation
+        let phonePattern = /^[0-9]{10}$/;
+        if (!phonePattern.test(phone)) {
+            alert("Phone number must be exactly 10 digits.");
+            return false;
+        }
+
+        // Family Details Validation
+        if (familyName === "") {
+            alert("Family Name is required.");
+            return false;
+        }
+
+        if (isNaN(familyMembers) || familyMembers <= 0) {
+            alert("Number of Family Members must be a positive number.");
+            return false;
+        }
+
+        // Country Validation
+        if (country === "") {
+            alert("Country is required.");
+            return false;
+        }
+
+        // Example: Generate family login credential (e.g., using family name)
+        let familyUsername = familyName.toLowerCase().replace(/\s+/g, '') + "_fam";
+        let familyPassword = familyName.substring(0, 3).toLowerCase() + phone.slice(-4);
+
+        // Store user data (for demo)
+        let userData = {
+            name: name,
+            dob: dob,
+            annualIncome: annualIncome,
+            email: email,
+            phone: phone,
+            familyName: familyName,
+            familyMembers: familyMembers,
+            country: country,
+            familyLogin: {
+                username: familyUsername,
+                password: familyPassword
+            }
+        };
+
+        localStorage.setItem("user", JSON.stringify(userData));
+        alert(`Registration Successful!\nFamily Login:\nUsername: ${familyUsername}\nPassword: ${familyPassword}`);
+
+        document.getElementById("registerForm").submit(); // Allow submission now
+        return true;
+    }
+</script>
+{% endblock %}

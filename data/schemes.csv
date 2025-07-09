@@ -1,0 +1,55 @@
+ID,Name,Eligibility,Description,Documents,Process
+1,Pradhan Mantri Awas Yojana,"Income < 180000, Family size >= 2",Housing subsidy scheme to provide affordable housing for economically weaker sections.,"Aadhaar, Income Proof, Residence Proof, Family Details","1. Visit the official PMAY website or local municipal office.
+2. Fill out the application form with details.
+3. Submit required documents online or offline.
+4. Authorities will review the application.
+5. If approved, subsidy will be credited to the bank account."
+2,Pradhan Mantri Jan Dhan Yojana,"Any Indian citizen, No existing bank account",Financial inclusion scheme providing zero-balance bank accounts with insurance benefits.,"Aadhaar, Voter ID, Passport-size Photo","1. Visit a bank or Business Correspondent (Bank Mitra).
+2. Fill out the application form for a Jan Dhan account.
+3. Submit identity and address proof documents.
+4. Bank verifies the details and opens the account.
+5. Account holder receives a RuPay debit card with insurance benefits."
+3,Atal Pension Yojana,"Age 18-40, Must have a savings bank account",Retirement pension scheme for unorganized sector workers.,"Aadhaar, Bank Account Details, Mobile Number","1. Visit your bank or post office offering the scheme.
+2. Fill out the APY application form and select pension amount.
+3. Link Aadhaar and provide bank details.
+4. Set up auto-debit for monthly contributions.
+5. Pension starts after reaching the eligible retirement age."
+4,Pradhan Mantri Kisan Samman Nidhi,Small & marginal farmers with landholding up to 2 hectares,"Income support scheme providing ₹6,000 per year to farmers.","Aadhaar, Land Ownership Document, Bank Account Details","1. Register through the PM-KISAN portal or local agriculture office.
+2. Submit Aadhaar, land ownership proof, and bank details.
+3. Government verifies eligibility and processes application.
+4. Approved farmers receive ₹6,000 annually in three installments."
+5,Pradhan Mantri Mudra Yojana,"Small business owners, entrepreneurs, startups",Loan scheme to provide financial support to small businesses.,"Aadhaar, Business Plan, Address Proof, Bank Details","1. Visit any bank offering Mudra loans.
+2. Fill out the loan application with business details.
+3. Submit necessary documents and business plan.
+4. Bank verifies and approves the loan amount.
+5. Loan is disbursed under Shishu, Kishore, or Tarun category."
+6,Stand-Up India Scheme,"SC/ST or Women entrepreneurs, Age 18+",Loan scheme to promote entrepreneurship among women and SC/ST groups.,"Aadhaar, Business Plan, PAN Card, Address Proof","1. Visit the Stand-Up India portal or a participating bank.
+2. Submit the loan application with business details.
+3. Provide necessary documents including identity proof.
+4. Bank reviews the application and approves loan.
+5. Loan is sanctioned with guidance for business setup."
+7,Ayushman Bharat Yojana,"Low-income families, No existing health insurance",Health insurance scheme providing free treatment up to ₹5 lakh.,"Aadhaar, Income Certificate, Ration Card","1. Check eligibility on the Ayushman Bharat website.
+2. Visit an empaneled hospital or CSC center.
+3. Provide Aadhaar and income proof for verification.
+4. If eligible, receive an Ayushman card.
+5. Get free treatment at listed hospitals."
+8,National Pension System (NPS),"Age 18-65, Indian citizen",Voluntary pension savings scheme for all citizens.,"Aadhaar, PAN Card, Bank Account Details","1. Open an NPS account online or at a registered bank.
+2. Submit identity and bank details.
+3. Choose investment and pension fund options.
+4. Contribute regularly till retirement age.
+5. Withdraw pension upon retirement."
+9,Beti Bachao Beti Padhao,"Girl child born in India, No income limit",Scheme to promote education and welfare of girl children.,"Birth Certificate, Aadhaar, Parent's ID Proof","1. Visit the nearest Anganwadi center or bank.
+2. Fill out the application form for scheme benefits.
+3. Submit birth certificate and necessary documents.
+4. Authorities verify and enroll the child.
+5. Financial benefits and education support are provided."
+10,Sukanya Samriddhi Yojana,"Girl child below 10 years, Parents must be Indian citizens",Savings scheme for girl child’s education and marriage expenses.,"Birth Certificate, Parent’s Aadhaar, Address Proof","1. Open an SSY account in a bank or post office.
+2. Submit the required documents.
+3. Deposit a minimum of ₹250 annually.
+4. Earn tax-free interest till maturity.
+5. Withdraw funds for education or marriage after 21 years."
+11,Digital India Programme,Open to all Indian citizens,Promotes digital literacy and online government services.,"Aadhaar, Mobile Number","1. Register on the Digital India portal.
+2. Access online courses and e-governance services.
+3. Participate in digital skill development programs.
+4. Avail government services online like Aadhaar updates, PAN application, and more.
+5. Promote digital transactions and paperless governance."
